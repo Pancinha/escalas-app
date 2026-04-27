@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("VIEWER")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdSchedules Schedule[]  @relation("CreatedBy")
+  auditLogs        AuditLog[]
+}
+
+model Unit {
+  id        String     @id @default(cuid())
+  name      String
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+
+  sectors   Sector[]
+  employees Employee[]
+  schedules Schedule[]
+}
+
+model Sector {
+  id          String     @id @default(cuid())
+  name        String
+  color       String     @default("#059669")
+  minCoverage Int        @default(1)
+  unitId      String
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+
+  unit      Unit       @relation(fields: [unitId], references: [id])
+  employees Employee[]
+}
+
+model Employee {
+  id           String   @id @default(cuid())
+  name         String
+  registration String?  @unique
+  sectorId     String
+  unitId       String
+  active       Boolean  @default(true)
+  hiredAt      DateTime @default(now())
+  photoUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sector          Sector          @relation(fields: [sectorId], references: [id])
+  unit            Unit            @relation(fields: [unitId], references: [id])
+  scheduleEntries ScheduleEntry[]
+}
+
+model OccurrenceType {
+  id            String  @id @default(cuid())
+  code          String  @unique
+  label         String
+  color         String
+  bgColor       String
+  textColor     String
+  isAbsence     Boolean @default(false)
+  isBranchShift Boolean @default(false)
+  isSystem      Boolean @default(true)
+  active        Boolean @default(true)
+
+  scheduleEntries ScheduleEntry[]
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  date      String
+  name      String
+  type      String   @default("NATIONAL")
+  unitId    String?
+  createdAt DateTime @default(now())
+}
+
+model Schedule {
+  id          String    @id @default(cuid())
+  year        Int
+  month       Int
+  unitId      String
+  status      String    @default("DRAFT")
+  notes       String?
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  unit      Unit            @relation(fields: [unitId], references: [id])
+  createdBy User            @relation("CreatedBy", fields: [createdById], references: [id])
+  entries   ScheduleEntry[]
+
+  @@unique([year, month, unitId])
+}
+
+model ScheduleEntry {
+  id               String   @id @default(cuid())
+  scheduleId       String
+  employeeId       String
+  date             String
+  occurrenceTypeId String?
+  note             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  schedule       Schedule        @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  employee       Employee        @relation(fields: [employeeId], references: [id])
+  occurrenceType OccurrenceType? @relation(fields: [occurrenceTypeId], references: [id])
+
+  @@unique([scheduleId, employeeId, date])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  entity    String
+  entityId  String
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
