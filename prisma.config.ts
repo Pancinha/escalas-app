@@ -9,6 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // For Turso: embed the auth token in the URL so the Prisma CLI can connect
+    url: process.env.TURSO_AUTH_TOKEN
+      ? `${process.env.DATABASE_URL}?authToken=${process.env.TURSO_AUTH_TOKEN}`
+      : process.env.DATABASE_URL,
   },
 });

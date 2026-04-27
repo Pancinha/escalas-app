@@ -7,13 +7,21 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const filePath = rawUrl.replace(/^file:/, "");
-const absolutePath = path.isAbsolute(filePath)
-  ? filePath
-  : path.join(process.cwd(), filePath);
+const url = process.env.DATABASE_URL ?? "file:./dev.db";
 
-const adapter = new PrismaLibSql({ url: `file:${absolutePath}` });
+let adapter;
+if (!url.startsWith("file:")) {
+  // Remote Turso/LibSQL
+  adapter = new PrismaLibSql({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+} else {
+  // Local SQLite
+  const filePath = url.replace(/^file:/, "");
+  const absolutePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.join(process.cwd(), filePath);
+  adapter = new PrismaLibSql({ url: `file:${absolutePath}` });
+}
+
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
