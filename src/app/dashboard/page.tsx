@@ -50,8 +50,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch("/api/dashboard")
-      .then((r) => r.json())
-      .then(setData);
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then(setData)
+      .catch(() => setData(null));
   }, []);
 
   const stats = data

@@ -17,9 +17,14 @@ export default function SetoresPage() {
 
   async function loadSectors() {
     setLoading(true);
-    const data = await fetch("/api/sectors").then((r) => r.json());
-    setSectors(data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/sectors");
+      if (res.ok) setSectors(await res.json());
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadSectors(); }, []);

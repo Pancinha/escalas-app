@@ -25,13 +25,18 @@ export default function FuncionariosPage() {
 
   async function loadData() {
     setLoading(true);
-    const [empRes, secRes] = await Promise.all([
-      fetch("/api/employees?active=true"),
-      fetch("/api/sectors"),
-    ]);
-    setEmployees(await empRes.json());
-    setSectors(await secRes.json());
-    setLoading(false);
+    try {
+      const [empRes, secRes] = await Promise.all([
+        fetch("/api/employees?active=true"),
+        fetch("/api/sectors"),
+      ]);
+      if (empRes.ok) setEmployees(await empRes.json());
+      if (secRes.ok) setSectors(await secRes.json());
+    } catch {
+      // silently fail — page shows empty state
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadData(); }, []);

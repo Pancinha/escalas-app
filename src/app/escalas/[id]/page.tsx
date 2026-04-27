@@ -34,31 +34,39 @@ export default function EscalaDetailPage({ params }: { params: Promise<{ id: str
 
   const loadSchedule = useCallback(async () => {
     setLoading(true);
-    const [schedRes, occRes, secRes] = await Promise.all([
-      fetch(`/api/schedules/${id}`),
-      fetch("/api/occurrence-types"),
-      fetch("/api/sectors"),
-    ]);
+    try {
+      const [schedRes, occRes, secRes] = await Promise.all([
+        fetch(`/api/schedules/${id}`),
+        fetch("/api/occurrence-types"),
+        fetch("/api/sectors"),
+      ]);
 
-    const sched: Schedule & { entries: ScheduleEntry[] } = await schedRes.json();
-    const occs: OccurrenceType[] = await occRes.json();
-    const secs: Sector[] = await secRes.json();
+      if (!schedRes.ok) { router.replace("/escalas"); return; }
 
-    setSchedule(sched);
-    setEntries(sched.entries ?? []);
-    setOccurrenceTypes(occs);
-    setSectors(secs);
+      const sched: Schedule & { entries: ScheduleEntry[] } = await schedRes.json();
+      const occs: OccurrenceType[] = occRes.ok ? await occRes.json() : [];
+      const secs: Sector[] = secRes.ok ? await secRes.json() : [];
 
-    const holRes = await fetch(`/api/holidays?year=${sched.year}`);
-    const hols: Holiday[] = await holRes.json();
-    setHolidays(hols.map((h) => h.date));
+      setSchedule(sched);
+      setEntries(sched.entries ?? []);
+      setOccurrenceTypes(occs);
+      setSectors(secs);
 
-    const empRes = await fetch(`/api/employees?unitId=${sched.unitId}&active=true`);
-    const emps: Employee[] = await empRes.json();
-    setEmployees(emps);
-
-    setLoading(false);
-  }, [id]);
+      const [holRes, empRes] = await Promise.all([
+        fetch(`/api/holidays?year=${sched.year}`),
+        fetch(`/api/employees?unitId=${sched.unitId}&active=true`),
+      ]);
+      if (holRes.ok) {
+        const hols: Holiday[] = await holRes.json();
+        setHolidays(hols.map((h) => h.date));
+      }
+      if (empRes.ok) setEmployees(await empRes.json());
+    } catch {
+      router.replace("/escalas");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, router]);
 
   useEffect(() => { loadSchedule(); }, [loadSchedule]);
 

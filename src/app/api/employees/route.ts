@@ -42,6 +42,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Campos obrigatórios ausentes" }, { status: 400 });
     }
 
+    if (registration) {
+      const dup = await prisma.employee.findUnique({ where: { registration } });
+      if (dup) return NextResponse.json({ error: "Matrícula já cadastrada" }, { status: 409 });
+    }
+
     const employee = await prisma.employee.create({
       data: { name, registration: registration || null, sectorId, unitId },
       include: { sector: true, unit: true },

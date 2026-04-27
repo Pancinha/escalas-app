@@ -29,8 +29,9 @@ export default function EscalasPage() {
 
   useEffect(() => {
     fetch("/api/schedules")
-      .then((r) => r.json())
-      .then((data) => { setSchedules(data); setLoading(false); });
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data) => { setSchedules(data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
   const byYear = schedules.reduce<Record<number, Schedule[]>>((acc, s) => {
