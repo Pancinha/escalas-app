@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Schedule, Employee, ScheduleEntry, OccurrenceType, Holiday, Sector } from "@/types";
 import { getMonthName, statusLabel } from "@/lib/utils";
-import { Loader2, CheckCircle, Lock, ChevronDown } from "lucide-react";
+import { Loader2, CheckCircle, Lock, FileDown } from "lucide-react";
 
 const statusVariantMap: Record<string, "draft" | "published" | "locked"> = {
   DRAFT: "draft",
@@ -139,6 +139,13 @@ export default function EscalaDetailPage({ params }: { params: Promise<{ id: str
             <Badge variant={statusVariantMap[schedule.status] ?? "draft"}>
               {statusLabel(schedule.status)}
             </Badge>
+
+            <a href={`/escalas/${id}/print`} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="outline" className="gap-1.5">
+                <FileDown className="h-3.5 w-3.5" />
+                PDF
+              </Button>
+            </a>
 
             {/* Sector filter */}
             <div className="flex gap-1.5 items-center">
